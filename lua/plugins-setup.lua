@@ -1,101 +1,92 @@
--- Bootstrap Packer automatically
-local ensure_packer = function()
-  local fn = vim.fn
-  local install_path = fn.stdpath("data") .. "/site/pack/packer/start/packer.nvim"
-  if fn.empty(fn.glob(install_path)) > 0 then
-    fn.system({ "git", "clone", "--depth", "1", "https://github.com/wbthomason/packer.nvim", install_path })
-    vim.cmd([[packadd packer.nvim]])
-    return true
-  end
-  return false
+-- Bootstrap lazy.nvim
+local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
+if not vim.loop.fs_stat(lazypath) then
+  vim.fn.system({
+    "git",
+    "clone",
+    "--filter=blob:none",
+    "https://github.com/folke/lazy.nvim.git",
+    "--branch=stable",
+    lazypath,
+  })
 end
+vim.opt.rtp:prepend(lazypath)
 
-local packer_bootstrap = ensure_packer()
-
--- Auto-recompile when this file is saved
-vim.cmd([[
-  augroup packer_user_config
-    autocmd!
-    autocmd BufWritePost plugins-setup.lua source <afile> | PackerSync
-  augroup end
-]])
-
-local status, packer = pcall(require, "packer")
-if not status then
-  return
-end
-
-return packer.startup(function(use)
-  -- Plugin manager
-  use("wbthomason/packer.nvim")
-
+require("lazy").setup({
   -- Lua functions used by many plugins
-  use("nvim-lua/plenary.nvim")
+  "nvim-lua/plenary.nvim",
 
   -- Colorscheme
-  use("travisvroman/adwaita.nvim")
+  "Mofiqul/vscode.nvim",
 
   -- Essential plugins
-  use("tpope/vim-surround")
-  use("vim-scripts/ReplaceWithRegister")
-  use("numToStr/Comment.nvim")
+  "tpope/vim-surround",
+  "vim-scripts/ReplaceWithRegister",
+  "numToStr/Comment.nvim",
 
   -- File explorer
-  use("nvim-tree/nvim-tree.lua")
+  "nvim-tree/nvim-tree.lua",
 
   -- VSCode-like icons
-  use("kyazdani42/nvim-web-devicons")
+  "kyazdani42/nvim-web-devicons",
 
   -- Statusline
-  use("nvim-lualine/lualine.nvim")
+  "nvim-lualine/lualine.nvim",
 
   -- Fuzzy finder
-  use({ "nvim-telescope/telescope-fzf-native.nvim", run = "make" })
-  use({ "nvim-telescope/telescope.nvim" })
+  { "nvim-telescope/telescope-fzf-native.nvim", build = "make" },
+  "nvim-telescope/telescope.nvim",
 
   -- Autocompletion
-  use("hrsh7th/nvim-cmp")
-  use("hrsh7th/cmp-buffer")
-  use("hrsh7th/cmp-path")
+  "hrsh7th/nvim-cmp",
+  "hrsh7th/cmp-buffer",
+  "hrsh7th/cmp-path",
 
-  -- Snippets (required by nvim-cmp)
-  use("L3MON4D3/LuaSnip")
-  use("saadparwaiz1/cmp_luasnip")
-  use("rafamadriz/friendly-snippets")
+  -- Snippets
+  "L3MON4D3/LuaSnip",
+  "saadparwaiz1/cmp_luasnip",
+  "rafamadriz/friendly-snippets",
 
-  -- Managing & configuring LSP servers
-  use("williamboman/mason.nvim")
-  use("williamboman/mason-lspconfig.nvim")
-  use("neovim/nvim-lspconfig")
-  use("hrsh7th/cmp-nvim-lsp")
-  use({ "glepnir/lspsaga.nvim", branch = "main" })
-  use("onsails/lspkind.nvim")
+  -- LSP
+  "williamboman/mason.nvim",
+  "williamboman/mason-lspconfig.nvim",
+  "neovim/nvim-lspconfig",
+  "hrsh7th/cmp-nvim-lsp",
+  { "glepnir/lspsaga.nvim", branch = "main" },
+  "onsails/lspkind.nvim",
 
-  -- Formatting & linting
-  use("stevearc/conform.nvim")
+  -- Formatting
+  "stevearc/conform.nvim",
 
-  -- Treesitter (syntax highlighting)
-  use({
+  -- Treesitter
+  {
     "nvim-treesitter/nvim-treesitter",
-    run = function()
+    build = function()
       local ts_update = require("nvim-treesitter.install").update({ with_sync = true })
       ts_update()
     end,
-  })
+  },
 
   -- Auto-closing
-  use("windwp/nvim-autopairs")
-  use({ "windwp/nvim-ts-autotag", after = "nvim-treesitter" })
+  "windwp/nvim-autopairs",
+  { "windwp/nvim-ts-autotag", dependencies = { "nvim-treesitter/nvim-treesitter" } },
 
   -- TODO comment highlighting
-  use("travisvroman/todo-comments.nvim")
+  "travisvroman/todo-comments.nvim",
 
-  -- Visual debugger
-  use("mfussenegger/nvim-dap")
-  use("jay-babu/mason-nvim-dap.nvim")
-  use({ "rcarriga/nvim-dap-ui", requires = { "mfussenegger/nvim-dap", "nvim-neotest/nvim-nio" } })
+  -- Git signs
+  {
+    "lewis6991/gitsigns.nvim",
+    config = function()
+      require("gitsigns").setup()
+    end,
+  },
 
-  if packer_bootstrap then
-    require("packer").sync()
-  end
-end)
+  -- DAP
+  "mfussenegger/nvim-dap",
+  "jay-babu/mason-nvim-dap.nvim",
+  {
+    "rcarriga/nvim-dap-ui",
+    dependencies = { "mfussenegger/nvim-dap", "nvim-neotest/nvim-nio" },
+  },
+})
